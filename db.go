@@ -94,19 +94,8 @@ func (db *DB) PingContext(ctx context.Context) error {
 
 // Prepare creates a prepared statement for later queries or executions
 // on each physical database, concurrently.
-func (db *DB) Prepare(query string) (Stmt, error) {
-	stmts := make([]*sql.Stmt, len(db.pdbs))
-
-	err := scatter(len(db.pdbs), func(i int) (err error) {
-		stmts[i], err = db.pdbs[i].Prepare(query)
-		return err
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	return &stmt{db: db, stmts: stmts}, nil
+func (db *DB) Prepare(query string) (*sql.Stmt, error) {
+	return db.Master().Prepare(query)
 }
 
 // PrepareContext creates a prepared statement for later queries or executions
@@ -114,18 +103,8 @@ func (db *DB) Prepare(query string) (Stmt, error) {
 //
 // The provided context is used for the preparation of the statement, not for
 // the execution of the statement.
-func (db *DB) PrepareContext(ctx context.Context, query string) (Stmt, error) {
-	stmts := make([]*sql.Stmt, len(db.pdbs))
-
-	err := scatter(len(db.pdbs), func(i int) (err error) {
-		stmts[i], err = db.pdbs[i].PrepareContext(ctx, query)
-		return err
-	})
-
-	if err != nil {
-		return nil, err
-	}
-	return &stmt{db: db, stmts: stmts}, nil
+func (db *DB) PrepareContext(ctx context.Context, query string) (*sql.Stmt, error) {
+	return db.Master().PrepareContext(ctx, query)
 }
 
 // Query executes a query that returns rows, typically a SELECT.
